@@ -1,5 +1,10 @@
 import { Types } from 'mongoose';
 
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
 export interface IUser {
   firstName: string;
   lastName: string;
@@ -8,6 +13,7 @@ export interface IUser {
   password: string;
   dateOfBirth: Date;
   preferences: Types.ObjectId[];
+  role: UserRole;
   refreshToken: string | null;
   createdAt: Date;
   updatedAt: Date;

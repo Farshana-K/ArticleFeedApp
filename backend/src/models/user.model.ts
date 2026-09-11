@@ -1,5 +1,5 @@
 import { Document, Model, Schema, model } from 'mongoose';
-import { IUser } from '../interfaces/user.interface';
+import { IUser, UserRole } from '../interfaces/user.interface';
 
 export interface UserDocument extends IUser, Document {}
 
@@ -38,6 +38,11 @@ const userSchema = new Schema<UserDocument>(
     dateOfBirth: {
       type: Date,
       required: [true, 'Date of birth is required'],
+    },
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.USER,
     },
     preferences: {
       type: [{ type: Schema.Types.ObjectId, ref: 'Category' }],

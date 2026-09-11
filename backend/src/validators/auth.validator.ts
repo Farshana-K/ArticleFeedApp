@@ -7,7 +7,7 @@ const MIN_PASSWORD_LENGTH = 8;
 export const registerSchema = z
   .object({
     firstName: z.string().trim().min(2, 'First name must be at least 2 characters').max(50),
-    lastName: z.string().trim().min(2, 'Last name must be at least 2 characters').max(50),
+    lastName: z.string().trim().min(1, 'Last name must be at least 1 character').max(50),
     email: z.string().trim().toLowerCase().email('Invalid email address'),
     phone: z
       .string()

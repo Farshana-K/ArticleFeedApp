@@ -73,3 +73,34 @@ export async function updateUserRefreshToken(
 ): Promise<void> {
   await UserModel.findByIdAndUpdate(userId, { refreshToken: hashedRefreshToken });
 }
+
+export async function findUserByIdWithPassword(userId: string): Promise<UserDocument | null> {
+  return UserModel.findById(userId).select('+password');
+}
+
+export async function updateUserProfile(
+  userId: string,
+  updates: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    dateOfBirth?: Date;
+  },
+): Promise<UserDocument | null> {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { $set: updates },
+    { new: true, runValidators: true },
+  );
+}
+
+
+
+export async function updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+  await UserModel.findByIdAndUpdate(userId, { $set: { password: hashedPassword } }, { runValidators: true });
+}
+
+export async function updateUserPreferences(userId: string, preferences: Types.ObjectId[]): Promise<void> {
+  await UserModel.findByIdAndUpdate(userId, { $set: { preferences } }, { runValidators: true });
+}

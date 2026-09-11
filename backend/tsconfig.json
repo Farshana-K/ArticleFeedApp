@@ -29,6 +29,6 @@
     "sourceMap": true,
     "declaration": false
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../frontend/src/validators/password.validator.ts"],
   "exclude": ["node_modules", "dist"]
 }
