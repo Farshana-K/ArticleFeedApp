@@ -9,7 +9,7 @@ function baseCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'none',
   };
 }
 
