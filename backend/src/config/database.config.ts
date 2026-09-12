@@ -3,28 +3,22 @@ import { env } from './env.config';
 
 mongoose.set('strictQuery', true);
 
+let cachedConnection: typeof mongoose.connection | null = null;
+
 export async function connectDatabase(): Promise<void> {
+  if (cachedConnection && mongoose.connection.readyState === 1) return;
+
   try {
     await mongoose.connect(env.MONGODB_URI);
-    // eslint-disable-next-line no-console
-    console.log(`MongoDB connected: ${mongoose.connection.host}`);
+    cachedConnection = mongoose.connection;
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('MongoDB connection failed:', error instanceof Error ? error.message : error);
-    process.exit(1);
+    throw new Error(
+      `MongoDB connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
 export async function disconnectDatabase(): Promise<void> {
+  cachedConnection = null;
   await mongoose.disconnect();
 }
-
-mongoose.connection.on('error', (error: Error) => {
-  // eslint-disable-next-line no-console
-  console.error('MongoDB connection error:', error.message);
-});
-
-mongoose.connection.on('disconnected', () => {
-  // eslint-disable-next-line no-console
-  console.warn('MongoDB disconnected');
-});
