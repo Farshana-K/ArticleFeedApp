@@ -1,17 +1,18 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   getCurrentUser,
   login,
   logout,
   register,
-} from '../../services/auth.service';
-import type { LoginInput, RegisterInput } from '../../services/auth.service';
-import type { User } from '../../types/auth.types';
-import { getApiErrorMessage } from '../../utils/api-error.util';
+} from "../../services/auth.service";
+import type { LoginInput, RegisterInput } from "../../services/auth.service";
+import type { User } from "../../types/auth.types";
+import { getApiErrorMessage } from "../../utils/api-error.util";
 
 interface AuthState {
   user: User | null;
   isLoading: boolean;
+  isInitializing: boolean;
   isAuthenticated: boolean;
   error: string | null;
 }
@@ -19,12 +20,13 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   isLoading: false,
+  isInitializing: true,
   isAuthenticated: false,
   error: null,
 };
 
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (input: LoginInput, { rejectWithValue }) => {
     try {
       const response = await login(input);
@@ -35,16 +37,13 @@ export const loginUser = createAsyncThunk(
   },
 );
 
-export const fetchCurrentUser = createAsyncThunk(
-  'auth/me',
-  async () => {
-    const response = await getCurrentUser();
-    return response.data.data.user as User;
-  },
-);
+export const fetchCurrentUser = createAsyncThunk("auth/me", async () => {
+  const response = await getCurrentUser();
+  return response.data.data.user as User;
+});
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (input: RegisterInput, { rejectWithValue }) => {
     try {
       const response = await register(input);
@@ -55,15 +54,12 @@ export const registerUser = createAsyncThunk(
   },
 );
 
-export const logoutUser = createAsyncThunk(
-  'auth/logout',
-  async () => {
-    await logout();
-  },
-);
+export const logoutUser = createAsyncThunk("auth/logout", async () => {
+  await logout();
+});
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     clearAuthError: (state) => {
@@ -98,9 +94,18 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.isInitializing = true;
+      })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.isInitializing = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.isInitializing = false;
+        state.user = null;
+        state.isAuthenticated = false;
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;

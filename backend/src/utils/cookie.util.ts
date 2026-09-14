@@ -6,10 +6,12 @@ export const ACCESS_TOKEN_COOKIE_NAME = 'accessToken';
 export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
 
 function baseCookieOptions(): CookieOptions {
+  const isProduction = env.NODE_ENV === 'production';
+
   return {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'none',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
   };
 }
 
