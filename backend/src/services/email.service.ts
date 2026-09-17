@@ -1,4 +1,6 @@
+
 import nodemailer, { Transporter } from 'nodemailer';
+
 import { env } from '../config/env.config';
 import { IEmailService } from '../contracts/email.service.interface';
 
@@ -7,9 +9,7 @@ export class EmailService implements IEmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: env.EMAIL_HOST,
-      port: env.EMAIL_PORT,
-      secure: env.EMAIL_PORT === 465,
+      service: 'gmail',
       auth: {
         user: env.EMAIL_USER,
         pass: env.EMAIL_PASSWORD,
@@ -40,5 +40,5 @@ export class EmailService implements IEmailService {
       text: `Your password reset OTP is ${otp}. It will expire in 1 minute.`,
     });
   }
-
 }
+
