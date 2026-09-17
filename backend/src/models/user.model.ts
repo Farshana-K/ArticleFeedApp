@@ -22,6 +22,10 @@ const userSchema = new Schema<UserDocument>(
       lowercase: true,
       trim: true,
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
     phone: {
       type: String,
       required: [true, 'Phone number is required'],

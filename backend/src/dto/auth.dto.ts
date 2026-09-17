@@ -19,7 +19,7 @@ export interface SafeUserDTO {
 export interface AuthResponseDTO {
   user: SafeUserDTO;
 }
-
+ 
 export interface RefreshTokenResponseDTO {
   accessTokenRefreshed: true;
 }

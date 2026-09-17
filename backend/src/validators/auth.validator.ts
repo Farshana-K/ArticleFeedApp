@@ -35,4 +35,60 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const verifyEmailSchema = z.object({
+  userId: z.string().regex(OBJECT_ID_REGEX, 'Invalid user id'),
+  otp: z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+});
+
+export const resendVerificationOtpSchema = z.object({
+  userId: z.string().regex(OBJECT_ID_REGEX, 'Invalid user id'),
+});
+
+export type ResendVerificationOtpRequestDTO = z.infer<
+  typeof resendVerificationOtpSchema
+>;
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email('Invalid email address'),
+});
+
+export type ForgotPasswordRequestDTO = z.infer<
+  typeof forgotPasswordSchema
+>;
+
+export const verifyPasswordResetOtpSchema = z.object({
+  userId: z.string().regex(OBJECT_ID_REGEX, 'Invalid user id'),
+  otp: z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+});
+
+export type VerifyPasswordResetOtpRequestDTO = z.infer<
+  typeof verifyPasswordResetOtpSchema
+>;
+
+export const resetPasswordSchema = z
+  .object({
+    resetToken: z.string().min(1, 'Reset token is required'),
+    newPassword: z
+      .string()
+      .min(MIN_PASSWORD_LENGTH, 'Password must be at least 8 characters'),
+    confirmPassword: z
+      .string()
+      .min(MIN_PASSWORD_LENGTH, 'Confirm password is required'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type ResetPasswordRequestDTO = z.infer<
+  typeof resetPasswordSchema
+>;
+export const resendPasswordResetOtpSchema = z.object({
+  userId: z.string().regex(OBJECT_ID_REGEX, 'Invalid user id'),
+});
 export type LoginRequestDTO = z.infer<typeof loginSchema>;
+export type VerifyEmailRequestDTO = z.infer<typeof verifyEmailSchema>;

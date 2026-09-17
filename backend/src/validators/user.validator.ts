@@ -32,17 +32,11 @@ const preferencesUpdateSchema = z.object({
   preferences: z.array(objectIdSchema).min(1, 'At least one preference is required'),
 }).strict();
 
-export const updateProfileSchema = z.object({
-  body: profileUpdateSchema,
-});
+export const updateProfileSchema = profileUpdateSchema;
 
-export const updatePasswordSchema = z.object({
-  body: passwordUpdateSchema,
-});
+export const updatePasswordSchema = passwordUpdateSchema;
 
-export const updatePreferencesSchema = z.object({
-  body: preferencesUpdateSchema,
-});
+export const updatePreferencesSchema = preferencesUpdateSchema;
 
 export type UpdateProfileRequestDTO = z.infer<typeof profileUpdateSchema>;
 export type UpdatePasswordRequestDTO = z.infer<typeof passwordUpdateSchema>;

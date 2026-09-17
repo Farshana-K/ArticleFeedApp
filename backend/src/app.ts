@@ -40,5 +40,5 @@ app.use(notFoundMiddleware);
 
 // Centralized error handler — must be registered last
 app.use(errorMiddleware);
-
+ 
 export default app;

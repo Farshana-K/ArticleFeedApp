@@ -11,10 +11,18 @@ const envSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string().min(1, 'JWT_ACCESS_SECRET is required'),
   JWT_REFRESH_SECRET: z.string().min(1, 'JWT_REFRESH_SECRET is required'),
-  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
-  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_ACCESS_EXPIRES_IN: z.string().min(1, 'JWT_ACCESS_EXPIRES_IN is required'),
+  JWT_REFRESH_EXPIRES_IN: z.string().min(1, 'JWT_REFRESH_EXPIRES_IN is required'),
+  JWT_PASSWORD_RESET_SECRET: z.string().min(1, 'JWT_PASSWORD_RESET_SECRET is required'),
+  JWT_PASSWORD_RESET_EXPIRES_IN: z.string().min(1, 'JWT_PASSWORD_RESET_EXPIRES_IN is required'),
+    
+CLIENT_URL: z.string().min(1, 'CLIENT_URL is required'),
 
-  CLIENT_URL: z.string().min(1, 'CLIENT_URL is required'),
+  EMAIL_HOST: z.string().min(1, 'EMAIL_HOST is required'),
+  EMAIL_PORT: z.coerce.number().default(587),
+  EMAIL_USER: z.string().min(1, 'EMAIL_USER is required'),
+  EMAIL_PASSWORD: z.string().min(1, 'EMAIL_PASSWORD is required'),
+  EMAIL_FROM: z.string().min(1, 'EMAIL_FROM is required'),
 
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
@@ -23,6 +31,8 @@ const envSchema = z.object({
 
 type Env = z.infer<typeof envSchema>;
 
+
+
 function loadEnv(): Env {
   const parsed = envSchema.safeParse(process.env);
 
@@ -30,6 +40,7 @@ function loadEnv(): Env {
     const formattedErrors = parsed.error.issues
       .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
       .join('\n');
+
     // eslint-disable-next-line no-console
     console.error(`Invalid environment configuration:\n${formattedErrors}`);
     process.exit(1);
@@ -38,4 +49,14 @@ function loadEnv(): Env {
   return parsed.data;
 }
 
-export const env: Env = loadEnv();
+const loadedEnv = loadEnv();
+
+console.log({
+  emailHost: loadedEnv.EMAIL_HOST,
+  emailPort: loadedEnv.EMAIL_PORT,
+  emailUser: loadedEnv.EMAIL_USER,
+  emailPasswordLength: loadedEnv.EMAIL_PASSWORD.length,
+  emailFrom: loadedEnv.EMAIL_FROM,
+});
+
+export const env: Env = loadedEnv;

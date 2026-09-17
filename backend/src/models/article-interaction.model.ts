@@ -21,7 +21,7 @@ const articleInteractionSchema = new Schema<ArticleInteractionDocument>(
     interactionType: {
       type: String,
       enum: INTERACTION_TYPES,
-      required: [true, 'interactionType is required'],
+       required: [true, 'interactionType is required'],
     },
   },
   { timestamps: true },

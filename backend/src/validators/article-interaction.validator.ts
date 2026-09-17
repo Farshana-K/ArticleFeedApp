@@ -11,4 +11,4 @@ export const articleInteractionRequestSchema = z.object({
   body: articleInteractionSchema,
 });
 
-export type ArticleInteractionDTO = z.infer<typeof articleInteractionSchema>;
+export type ArticleInteractionDTO = z.infer<typeof articleInteractionSchema>;  

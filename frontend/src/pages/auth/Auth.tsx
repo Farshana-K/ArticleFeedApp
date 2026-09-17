@@ -1,24 +1,38 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux.hooks';
-import { loginUser, registerUser } from '../../store/slices/authSlice';
-import { fetchCategories } from '../../store/slices/categorySlice';
-import { loginSchema, registerSchema } from '../../validators/auth.validator';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
+import { useAppDispatch, useAppSelector } from "../../hooks/redux.hooks";
+
+import {
+  forgotPasswordUser,
+  loginUser,
+  registerUser,
+} from "../../store/slices/authSlice";
+
+import { fetchCategories } from "../../store/slices/categorySlice";
+
+import { loginSchema, registerSchema } from "../../validators/auth.validator";
+
 import type {
   LoginFormData,
   RegisterFormData,
-} from '../../validators/auth.validator';
-import { getApiErrorMessage } from '../../utils/api-error.util';
+} from "../../validators/auth.validator";
+
+import { getApiErrorMessage } from "../../utils/api-error.util";
 
 function Auth() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
 
   const categories = useAppSelector((state) => state.categories.categories);
 
@@ -33,7 +47,7 @@ function Auth() {
     },
   });
 
-  const preferences = registerForm.watch('preferences');
+  const preferences = registerForm.watch("preferences");
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -44,14 +58,16 @@ function Auth() {
       ? preferences.filter((id) => id !== categoryId)
       : [...preferences, categoryId];
 
-    registerForm.setValue('preferences', updatedPreferences);
+    registerForm.setValue("preferences", updatedPreferences);
   }
 
   async function handleLogin(data: LoginFormData) {
     try {
       await dispatch(loginUser(data)).unwrap();
-      toast.success('Login successful');
-      navigate('/dashboard');
+
+      toast.success("Login successful");
+
+      navigate("/dashboard");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
@@ -60,12 +76,35 @@ function Auth() {
   async function handleRegister(data: RegisterFormData) {
     try {
       await dispatch(registerUser(data)).unwrap();
-      toast.success('Account created successfully');
+
+      toast.success("Account created successfully");
+
       setIsRegistering(false);
+
       registerForm.reset();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
+  }
+
+  async function handleForgotPassword() {
+    if (!forgotPasswordEmail.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    try {
+      await dispatch(forgotPasswordUser(forgotPasswordEmail.trim())).unwrap();
+
+      toast.success("Password reset OTP sent to your email");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  }
+
+  function handleBackToLogin() {
+    setShowForgotPassword(false);
+    setForgotPasswordEmail("");
   }
 
   return (
@@ -77,19 +116,73 @@ function Auth() {
           </h1>
 
           <p className="mt-2 text-sm font-medium text-slate-500">
-            {isRegistering
-              ? 'Create an account to join the community'
-              : 'Welcome back! Please enter your details'}
+            {showForgotPassword
+              ? "Reset your password"
+              : isRegistering
+                ? "Create an account to join the community"
+                : "Welcome back! Please enter your details"}
           </p>
         </div>
 
-        {!isRegistering ? (
+        {showForgotPassword ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleForgotPassword();
+            }}
+            className="space-y-5"
+          >
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">
+                Forgot Password
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Enter your email address and we&apos;ll send you a password
+                reset OTP.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="forgotPasswordEmail"
+                className="mb-1 block text-sm font-medium text-slate-600"
+              >
+                Email address
+              </label>
+
+              <input
+                id="forgotPasswordEmail"
+                type="email"
+                value={forgotPasswordEmail}
+                onChange={(event) => setForgotPasswordEmail(event.target.value)}
+                placeholder="Email address"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-teal-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-teal-700"
+            >
+              Send OTP
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBackToLogin}
+              className="w-full text-sm font-semibold text-slate-600 hover:text-teal-600"
+            >
+              Back to Login
+            </button>
+          </form>
+        ) : !isRegistering ? (
           <form
             onSubmit={loginForm.handleSubmit(handleLogin)}
             className="space-y-5"
           >
             <input
-              {...loginForm.register('identifier')}
+              {...loginForm.register("identifier")}
               placeholder="Email or phone"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10"
             />
@@ -102,8 +195,8 @@ function Auth() {
 
             <div className="relative">
               <input
-                {...loginForm.register('password')}
-                type={showPassword ? 'text' : 'password'}
+                {...loginForm.register("password")}
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-14 text-sm focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
@@ -113,7 +206,7 @@ function Auth() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 hover:text-teal-600"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? "Hide" : "Show"}
               </button>
             </div>
 
@@ -130,8 +223,16 @@ function Auth() {
               Log In
             </button>
 
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="w-full text-center text-sm font-semibold text-teal-600 hover:text-teal-800 hover:underline"
+            >
+              Forgot Password?
+            </button>
+
             <p className="pt-4 text-center text-sm font-medium text-slate-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{" "}
               <button
                 type="button"
                 onClick={() => setIsRegistering(true)}
@@ -148,27 +249,27 @@ function Auth() {
           >
             <div className="grid grid-cols-2 gap-4">
               <input
-                {...registerForm.register('firstName')}
+                {...registerForm.register("firstName")}
                 placeholder="First name"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
 
               <input
-                {...registerForm.register('lastName')}
+                {...registerForm.register("lastName")}
                 placeholder="Last name"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
             </div>
 
             <input
-              {...registerForm.register('phone')}
+              {...registerForm.register("phone")}
               type="tel"
               placeholder="Phone number"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
             />
 
             <input
-              {...registerForm.register('email')}
+              {...registerForm.register("email")}
               type="email"
               placeholder="Email address"
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
@@ -184,7 +285,7 @@ function Auth() {
 
               <input
                 id="dateOfBirth"
-                {...registerForm.register('dateOfBirth')}
+                {...registerForm.register("dateOfBirth")}
                 type="date"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
@@ -206,8 +307,8 @@ function Auth() {
                       onClick={() => togglePreference(category.id)}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                         selected
-                          ? 'bg-teal-600 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? "bg-teal-600 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
                       {category.name}
@@ -219,8 +320,8 @@ function Auth() {
 
             <div className="relative">
               <input
-                {...registerForm.register('password')}
-                type={showPassword ? 'text' : 'password'}
+                {...registerForm.register("password")}
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-14 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
@@ -230,7 +331,7 @@ function Auth() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 hover:text-teal-600"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? "Hide" : "Show"}
               </button>
             </div>
 
@@ -242,20 +343,18 @@ function Auth() {
 
             <div className="relative">
               <input
-                {...registerForm.register('confirmPassword')}
-                type={showConfirmPassword ? 'text' : 'password'}
+                {...registerForm.register("confirmPassword")}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm password"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 pr-14 text-sm focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
               />
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
-                }
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500 hover:text-teal-600"
               >
-                {showConfirmPassword ? 'Hide' : 'Show'}
+                {showConfirmPassword ? "Hide" : "Show"}
               </button>
             </div>
 
@@ -273,7 +372,7 @@ function Auth() {
             </button>
 
             <p className="pt-4 text-center text-sm font-medium text-slate-600">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <button
                 type="button"
                 onClick={() => setIsRegistering(false)}

@@ -71,6 +71,7 @@ function Home() {
             <div className="mt-8 flex flex-wrap gap-4">
               <button
                 type="button"
+                onClick={() => setIsAuthOpen(true)}
                 className="flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-700"
               >
                 Get started
@@ -79,6 +80,7 @@ function Home() {
 
               <button
                 type="button"
+                onClick={() => setIsAuthOpen(true)}
                 className="rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:text-teal-600"
               >
                 Explore articles

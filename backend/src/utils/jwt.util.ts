@@ -10,6 +10,9 @@ export interface RefreshTokenPayload {
   userId: string;
 }
 
+export interface PasswordResetTokenPayload {
+  userId: string;
+}
 /**
  * Narrows jsonwebtoken's loosely-typed decoded payload (string | JwtPayload)
  * down to our known shape, verifying `userId` is actually present at
@@ -50,5 +53,27 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 /** Throws jsonwebtoken's own errors (TokenExpiredError / JsonWebTokenError) on failure. */
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
   const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
+  return { userId: extractUserId(decoded) };
+}
+
+
+export function generatePasswordResetToken(
+  payload: PasswordResetTokenPayload,
+): string {
+  return jwt.sign(payload, env.JWT_PASSWORD_RESET_SECRET, {
+    expiresIn: parseDurationToSeconds(
+      env.JWT_PASSWORD_RESET_EXPIRES_IN,
+    ),
+  });
+}
+
+export function verifyPasswordResetToken(
+  token: string,
+): PasswordResetTokenPayload {
+  const decoded = jwt.verify(
+    token,
+    env.JWT_PASSWORD_RESET_SECRET,
+  );
+
   return { userId: extractUserId(decoded) };
 }

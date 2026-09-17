@@ -15,3 +15,4 @@ export function errorResponse(message: string, errors?: unknown[]): ApiErrorResp
     ...(errors !== undefined ? { errors } : {}),
   };
 }
+ 

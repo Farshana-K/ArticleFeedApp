@@ -1,59 +1,14 @@
 import { Router } from 'express';
-import {
-  createCategory,
-  deleteCategory,
-  getCategories,
-  getCategory,
-  updateCategory,
-  updateCategoryStatus,
-} from '../controllers/category.controller';
+import { categoryController } from '../factories/controllers.factory';
 import { requireAdmin } from '../middlewares/admin.middleware';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { validateBody, validateParams } from '../middlewares/validate.middleware';
-import {
-  categoryIdSchema,
-  createCategoryRequestSchema,
-  updateCategoryRequestSchema,
-  updateCategoryStatusRequestSchema,
-} from '../validators/category.validator';
-
+import { categoryIdSchema, createCategoryRequestSchema, updateCategoryRequestSchema, updateCategoryStatusRequestSchema } from '../validators/category.validator';
 const router = Router();
-
-router.get('/', getCategories);
-router.get('/:id', getCategory);
-
-router.post(
-  '/',
-  requireAuth,
-  requireAdmin,
-  validateBody(createCategoryRequestSchema.shape.body),
-  createCategory,
-);
-
-router.put(
-  '/:id',
-  requireAuth,
-  requireAdmin,
-  validateParams(updateCategoryRequestSchema.shape.params),
-  validateBody(updateCategoryRequestSchema.shape.body),
-  updateCategory,
-);
-
-router.patch(
-  '/:id/status',
-  requireAuth,
-  requireAdmin,
-  validateParams(updateCategoryStatusRequestSchema.shape.params),
-  validateBody(updateCategoryStatusRequestSchema.shape.body),
-  updateCategoryStatus,
-);
-
-router.delete(
-  '/:id',
-  requireAuth,
-  requireAdmin,
-  validateParams(categoryIdSchema.shape.params),
-  deleteCategory,
-);
-
+router.get('/', categoryController.getCategories);
+router.get('/:id', validateParams(categoryIdSchema.shape.params), categoryController.getCategory);
+router.post('/', requireAuth, requireAdmin, validateBody(createCategoryRequestSchema.shape.body), categoryController.createCategory);
+router.put('/:id', requireAuth, requireAdmin, validateParams(updateCategoryRequestSchema.shape.params), validateBody(updateCategoryRequestSchema.shape.body), categoryController.updateCategory);
+router.patch('/:id/status', requireAuth, requireAdmin, validateParams(updateCategoryStatusRequestSchema.shape.params), validateBody(updateCategoryStatusRequestSchema.shape.body), categoryController.updateCategoryStatus);
+router.delete('/:id', requireAuth, requireAdmin, validateParams(categoryIdSchema.shape.params), categoryController.deleteCategory);
 export default router;

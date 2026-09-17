@@ -9,6 +9,7 @@ export interface IUser {
   firstName: string;
   lastName: string;
   email: string;
+  emailVerified: boolean;
   phone: string;
   password: string;
   dateOfBirth: Date;

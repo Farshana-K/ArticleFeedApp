@@ -1,102 +1,34 @@
 import { Types } from 'mongoose';
 import { NotFoundError } from '../errors/app.error';
-import { ArticleModel } from '../models/article.model';
-import {
-  createInteraction,
-  deleteInteraction,
-  findBlockedArticles,
-  findInteraction,
-  updateInteraction,
-} from '../repositories/article-interaction.repository';
+import { IArticleRepository } from '../contracts/article.repository.interface';
+import { IArticleInteractionRepository } from '../contracts/article-interaction.repository.interface';
+import { InteractionType } from '../interfaces/article-interaction.interface';
 import { ArticleInteractionDTO } from '../validators/article-interaction.validator';
 
-type InteractionType = 'like' | 'dislike' | 'block';
-
-const counterFields: Record<
-  InteractionType,
-  'likeCount' | 'dislikeCount' | 'blockCount'
-> = {
-  like: 'likeCount',
-  dislike: 'dislikeCount',
-  block: 'blockCount',
-};
-
-export async function setArticleInteraction(
-  articleId: string,
-  userId: string,
-  input: ArticleInteractionDTO,
-): Promise<{ likeCount: number; dislikeCount: number; blockCount: number }> {
-  if (!Types.ObjectId.isValid(articleId)) {
-    throw new NotFoundError('Article not found');
+const counterFields: Record<InteractionType, 'likeCount' | 'dislikeCount' | 'blockCount'> = { like: 'likeCount', dislike: 'dislikeCount', block: 'blockCount' };
+export class ArticleInteractionService {
+  constructor(private readonly articles: IArticleRepository, private readonly interactions: IArticleInteractionRepository) {}
+  async set(articleId: string, userId: string, input: ArticleInteractionDTO): Promise<{ likeCount: number; dislikeCount: number; blockCount: number }> {
+    if (!Types.ObjectId.isValid(articleId)) throw new NotFoundError('Article not found');
+    const article = await this.articles.findById(articleId); if (!article) throw new NotFoundError('Article not found');
+    const existing = await this.interactions.find(articleId, userId); const newType = input.interactionType as InteractionType;
+    if (existing?.interactionType === newType) return { likeCount: article.likeCount, dislikeCount: article.dislikeCount, blockCount: article.blockCount };
+    if (existing) {
+      await this.articles.incrementInteractionCounters(articleId, { [counterFields[existing.interactionType]]: -1, [counterFields[newType]]: 1 });
+      await this.interactions.update(articleId, userId, newType);
+    } else {
+      await this.articles.incrementInteractionCounters(articleId, { [counterFields[newType]]: 1 });
+      await this.interactions.create(articleId, userId, newType);
+    } 
+    const updated = await this.articles.findById(articleId);
+    return { likeCount: updated?.likeCount ?? 0, dislikeCount: updated?.dislikeCount ?? 0, blockCount: updated?.blockCount ?? 0 };
   }
-
-  const article = await ArticleModel.findById(articleId);
-  if (!article) throw new NotFoundError('Article not found');
-
-  const existing = await findInteraction(articleId, userId);
-  const newType = input.interactionType as InteractionType;
-
-  if (existing?.interactionType === newType) {
-    return {
-      likeCount: article.likeCount,
-      dislikeCount: article.dislikeCount,
-      blockCount: article.blockCount,
-    };
+  async remove(articleId: string, userId: string): Promise<void> {
+    if (!Types.ObjectId.isValid(articleId)) throw new NotFoundError('Article not found');
+    const article = await this.articles.findById(articleId); if (!article) throw new NotFoundError('Article not found');
+    const existing = await this.interactions.find(articleId, userId); if (!existing) return;
+    await this.articles.incrementInteractionCounters(articleId, { [counterFields[existing.interactionType]]: -1 });
+    await this.interactions.delete(articleId, userId);
   }
-
-  if (existing) {
-    const oldField = counterFields[existing.interactionType as InteractionType];
-    const newField = counterFields[newType];
-
-    await ArticleModel.updateOne(
-      { _id: articleId },
-      { $inc: { [oldField]: -1, [newField]: 1 } },
-    );
-
-    await updateInteraction(articleId, userId, newType);
-  } else {
-    await ArticleModel.updateOne(
-      { _id: articleId },
-      { $inc: { [counterFields[newType]]: 1 } },
-    );
-
-    await createInteraction(articleId, userId, newType);
-  }
-
-  const updatedArticle = await ArticleModel.findById(articleId);
-
-  return {
-    likeCount: updatedArticle?.likeCount ?? 0,
-    dislikeCount: updatedArticle?.dislikeCount ?? 0,
-    blockCount: updatedArticle?.blockCount ?? 0,
-  };
+  getBlocked(userId: string) { return this.interactions.findBlockedArticles(userId); }
 }
-
-export async function removeArticleInteraction(
-  articleId: string,
-  userId: string,
-): Promise<void> {
-  if (!Types.ObjectId.isValid(articleId)) {
-    throw new NotFoundError('Article not found');
-  }
-
-  const article = await ArticleModel.findById(articleId);
-  if (!article) throw new NotFoundError('Article not found');
-
-  const existing = await findInteraction(articleId, userId);
-  if (!existing) return;
-
-  const interactionType = existing.interactionType as InteractionType;
-
-  await ArticleModel.updateOne(
-    { _id: articleId },
-    { $inc: { [counterFields[interactionType]]: -1 } },
-  );
-
-  await deleteInteraction(articleId, userId);
-}
-
-export async function getBlockedArticles(userId: string) {
-  return findBlockedArticles(userId);
-}
-
